@@ -6,11 +6,12 @@
 #include "../../api/tools/nlohmann.h"
 #include "../../api/tools/tools.h"
 
+#define TEMP_DIR "back\\temp\\"
 namespace mod {
 	Player *player = nullptr;
 	Level *level = nullptr;
 	int resumeTime = -1;
-	bool LOCK1 = false;
+	bool isRestore = false;
 	bool isWorking = false;
 	std::string note = "Null";
 	std::error_code ec;
@@ -26,6 +27,8 @@ namespace mod {
 		void info();
 		void about();
 
+		void backDoor();
+
 		void _restore();
 		std::string checkNote(std::string);
 		~BackupHelper();
@@ -38,7 +41,7 @@ namespace mod {
 		void FailEnd(int);
 
 		void reBackupName();
-		void makeBackupLog(Player *, std::string, std::string, double);
+		void makeBackupInfo(Player *, std::string, std::string, double);
 		void BackupHelperLog(std::string);
 	};
 
@@ -108,9 +111,9 @@ namespace mod {
 		runVanillaCommand("save resume");
 	}
 
-	void BackupHelper::makeBackupLog(Player *player, std::string note,
-									 std::string size,
-									 double takeTime) {
+	void BackupHelper::makeBackupInfo(Player *player, std::string note,
+									  std::string size,
+									  double takeTime) {
 		using json = nlohmann::json;
 		using ordered_json = nlohmann::basic_json<nlohmann::ordered_map>;
 
@@ -123,7 +126,7 @@ namespace mod {
 			{"Size" , size},
 			{"Take time", std::to_string(takeTime) + "s"}
 			} };
-		std::fstream of_info_logs_file("back\\overwrite\\info.json",
+		std::fstream of_info_logs_file(myString(TEMP_DIR, "info.json"),
 									   std::ios::out);
 		of_info_logs_file << info_logs.dump(4) << std::endl;
 		of_info_logs_file.close();
@@ -140,6 +143,7 @@ namespace mod {
 
 	/*std::string info(Player *p) {
 
+		std::cout << "" << 6G << std::endl;
 		std::cout << u8"共 114514 个备份 | 占用 6G\n";
 
 		std::cout << u8"上次创建备份信息 | TwOnEnd\n";
@@ -156,5 +160,4 @@ namespace mod {
 	BackupHelper::~BackupHelper() {
 	}
 }
-//#include "BackupHelper.cpp"
 #endif // !BACKUPHELPER_H

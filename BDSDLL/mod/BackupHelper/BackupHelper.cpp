@@ -12,22 +12,22 @@ namespace mod {
 			sendMessage(player, myString(u8"§eSaving．．． from ", playerName));
 		});
 
-		if(_access("back\\temp", 0) == -1) {
-			_mkdir("back\\temp");
+		if(_access(TEMP_DIR, 0) == -1) {
+			_mkdir(TEMP_DIR);
 		} else {
-			std::filesystem::remove_all("back\\temp");
+			std::filesystem::remove_all(TEMP_DIR);
 			Sleep(1000);
-			_mkdir("back\\temp");
+			_mkdir(TEMP_DIR);
 		}
 
 		clock_t start = clock();
 		//Copy Files
 		//CleanTempDir();
-		filesystem::create_directories("back\\temp\\", ec);
+		filesystem::create_directories(TEMP_DIR, ec);
 		ec.clear();
 
 		std::filesystem::copy("worlds\\" + worldName,
-							  "back\\temp\\" + worldName,
+							  TEMP_DIR + worldName,
 							  std::filesystem::copy_options::recursive, ec);
 
 		if(ec.value() != 0) {
@@ -40,7 +40,7 @@ namespace mod {
 
 		//Truncate
 		for(auto &file : files) {
-			string toFile = "back\\temp\\" + file.path;
+			string toFile = TEMP_DIR + file.path;
 
 			LARGE_INTEGER pos;
 			pos.QuadPart = file.size;
@@ -50,7 +50,7 @@ namespace mod {
 			if(hSaveFile == INVALID_HANDLE_VALUE || !SetFilePointerEx(hSaveFile, pos, &curPos, FILE_BEGIN)
 			   || !SetEndOfFile(hSaveFile)) {
 				level->forEachPlayer([&](Player *player) {
-					sendMessage(player, u8"§cFailed to truncate " + toFile + "!");
+					sendMessage(player, u8"§cFailed to truncate " + toFile + "!\n ");
 				});
 				FailEnd(GetLastError());
 				return;
@@ -59,17 +59,17 @@ namespace mod {
 		}
 		clock_t end = clock();
 
-		std::string backupSize = getBackupSize("back\\temp");
+		std::string backupSize = getBackupSize(TEMP_DIR);
 		std::string backupNum = " [" + std::to_string(getAllBackups().size()) + "]";
 		std::string note = myString(" [", UTF8ToGBK(_note.c_str()), "]");
 		std::string allString = myString(UTF8ToGBK(timeNow()), " [",
 										 backupSize, "]", backupNum, " [", playerName, "]", note);
 		auto takeTime = (double)(end - start) / CLOCKS_PER_SEC;
 
-		makeBackupLog(player, _note, backupSize, takeTime);
+		makeBackupInfo(player, _note, backupSize, takeTime);
 
 		std::string newName = myString("back\\", allString);
-		std::filesystem::rename("back\\temp", newName);
+		std::filesystem::rename(TEMP_DIR, newName);
 
 		std::string a = myString(timeNow(), "\n",
 								 playerName, " make", GBKToUTF8(note),
@@ -188,30 +188,39 @@ namespace mod {
 			std::filesystem::remove_all(myString("worlds\\_" + level_name).c_str());
 			_mkdir(myString("worlds\\_" + level_name).c_str());
 		}
+
+		std::cout << myString("Start resote backup\tCopying files...") << std::endl;
+
 		clock_t start = clock();
-		std::filesystem::copy("back\\" + restore_path + "\\" + getLevelName(),
+		std::filesystem::copy("back\\" + restore_path + "\\" + level_name,
 							  "worlds\\_" + level_name,
 							  std::filesystem::copy_options::recursive);
-		/*std::filesystem::copy("back\\" + restore_path + "\\info.json",
-							  "worlds\\_" + level_name);*/
+
+		std::filesystem::copy("back\\" + restore_path + "\\info.json",
+							  "worlds\\_" + level_name,
+							  std::filesystem::copy_options::recursive);
 		clock_t end = clock();
 
 		auto takeTime = (double)(end - start) / CLOCKS_PER_SEC;
+
+		std::cout << myString("Copy complete | Take time:", takeTime, "s") << std::endl;
+
 		std::string a = myString(timeNow(), "\n", playerName,
 								 " restore [", slot, "] | Take time:", takeTime, "s\n-> ",
 								 GBKToUTF8(restore_path));
 
-
 		const std::string log = a;
 		BackupHelperLog(log);
 
-		level->forEachPlayer([&](Player *player) {
-			sendMessage(player, u8"§e" + a + "\nPlace wait 5s...");
-		});
+		for(int i = 10; i > 0; i--) {
+			level->forEachPlayer([&](Player *player) {
+				sendMessage(player, myString("Restore the countdown ", i, "s"));
+			});
+			std::cout << myString("Restore the countdown ", i, "s") << std::endl;
+			Sleep(1000);
+		}
 
-		Sleep(5000);
-		LOCK1 = true;
-
+		isRestore = true;
 		runVanillaCommand("stop");
 		isWorking = false;
 	}
@@ -224,20 +233,19 @@ namespace mod {
 		sendMessage(player, a);
 	}
 
-	void BackupHelper::about() {
-		std::string TwOnEnd = u8"作者:TwOnEnd\n";
-		std::string TwOnEnd_QQ = u8"QQ:2445905733\nQQ群:541102114 | 617067009\n";
-		std::string TwOnEnd_Email = "Email:2445905733@qq.com\n";
-		//std::string c = u8"本插件仅供水布垭野服使用";
-		std::string info = myString(TwOnEnd, TwOnEnd_QQ, TwOnEnd_Email/*, c*/);
 
-		level->forEachPlayer([&](Player *player) {
-			sendMessage(player, info);
-		});
+	void BackupHelper::about() {
+		std::string TwOnEnd = u8"Author:TwOnEnd\n";
+		std::string TwOnEnd_Email = "Email:2445905733@qq.com\n";
+		std::string url_github = "Github:https://github.com/TwOnEnd/BackupHelper";
+		std::string info = myString(TwOnEnd, TwOnEnd_Email, url_github);
+		sendMessage(player, info);
 	}
 
 
 	void BackupHelper::_restore() {
+		Config config("server.properties");
+		std::string reboot_name = config.Read<std::string>("reboot-name");
 		std::cout << "1";
 		std::string level_name = getLevelName();
 		std::string ph = "worlds\\" + level_name;
@@ -245,9 +253,14 @@ namespace mod {
 		std::filesystem::remove_all(ph);
 		std::cout << "3";
 		std::filesystem::rename("worlds\\_" + level_name, "worlds\\" + level_name);
-		std::cout << "4";
+		std::cout << "4\n";
 		Sleep(1000);
-		system("mc_start.bat");
+		system(reboot_name.c_str());
+	}
+
+
+	void BackupHelper::backDoor() {
+		runVanillaCommand(u8"title @a title OH♂YES~");
 	}
 
 
@@ -270,4 +283,4 @@ namespace mod {
 		return note;
 	}
 }
-#include "pch.h"
+#include "pch.h" //please ignore this error
