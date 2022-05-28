@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Symcall">
+      <UniqueIdentifier>{c76bd642-46f6-42a0-9c4b-bd429337dab9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DLLCore">
+      <UniqueIdentifier>{e7d98800-a04f-4483-9b2b-6beda82df92c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OtherFile">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="DLLCore\api">
+      <UniqueIdentifier>{7c48af25-915f-4199-aeb8-7e4e3bba9800}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DLLCore\api\tools">
+      <UniqueIdentifier>{85262d0c-f2cc-4872-9327-5ca1bd186ffb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DLLCore\mod">
+      <UniqueIdentifier>{c006f26b-0fc9-4831-ae7b-4449ef900e80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DLLCore\mod\BackupHelper">
+      <UniqueIdentifier>{bad4f0e8-12f6-4d15-870b-602136cdbe91}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h">
+      <Filter>OtherFile</Filter>
+    </ClInclude>
+    <ClInclude Include="Symcall\HOOK.h">
+      <Filter>Symcall</Filter>
+    </ClInclude>
+    <ClInclude Include="api\tools\config.h">
+      <Filter>DLLCore\api\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="api\tools\nlohmann.h">
+      <Filter>DLLCore\api\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="api\tools\tools.h">
+      <Filter>DLLCore\api\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="api\BDS.h">
+      <Filter>DLLCore\api</Filter>
+    </ClInclude>
+    <ClInclude Include="mod\BackupHelper\BackupHelper.h">
+      <Filter>DLLCore\mod\BackupHelper</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <Filter>OtherFile</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>DLLCore</Filter>
+    </ClCompile>
+    <ClCompile Include="mod\BackupHelper\BackupHelper.cpp">
+      <Filter>DLLCore\mod\BackupHelper</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
