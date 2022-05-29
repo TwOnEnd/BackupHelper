@@ -35,6 +35,8 @@
 #pragma warning(disable:4267)
 #pragma warning(disable:4244)
 
+#define TEMP_DIR "backup\\backup\\temp\\"
+
 //----------------------------------
 // 基本类型定义
 //----------------------------------

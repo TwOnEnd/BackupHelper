@@ -129,7 +129,6 @@ void exit() {
 	// 此处填写插件卸载时的操作
 	if(mod::isRestore == true && mod::isWorking == false) {
 		mod::isRestore = false;
-		mod::BackupHelper backuphelper;
-		backuphelper._restore();
+		system("overwrite.exe");
 	}
 }

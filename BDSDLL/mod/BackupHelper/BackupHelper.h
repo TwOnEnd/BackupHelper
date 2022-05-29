@@ -6,7 +6,7 @@
 #include "../../api/tools/nlohmann.h"
 #include "../../api/tools/tools.h"
 
-#define TEMP_DIR "back\\temp\\"
+
 namespace mod {
 	Player *player = nullptr;
 	Level *level = nullptr;
@@ -28,21 +28,18 @@ namespace mod {
 		void about();
 
 		void backDoor();
-
-		void _restore();
 		std::string checkNote(std::string);
 		~BackupHelper();
 
 	private:
-		std::string getLevelName();
+		std::string getWorldName();
 		std::string getBackupSize(std::string);
 		std::vector<std::string> getAllBackups();
 
 		void FailEnd(int);
 
 		void reBackupName();
-		void makeBackupInfo(Player *, std::string, std::string, double);
-		void BackupHelperLog(std::string);
+
 	};
 
 
@@ -50,7 +47,7 @@ namespace mod {
 	}
 
 
-	std::string BackupHelper::getLevelName() {
+	std::string BackupHelper::getWorldName() {
 		Config config("server.properties");
 		std::string level_name;
 		level_name = config.Read<std::string>("level-name");
@@ -68,7 +65,7 @@ namespace mod {
 			c = a.find("]", b);
 			d = backList[i];
 			d.replace(b + 1, c - b - 1, std::to_string(i + 1));
-			std::filesystem::rename("back\\" + backList[i], "back\\" + d);
+			std::filesystem::rename("backup\\backup\\" + backList[i], "backup\\backup\\" + d);
 		}
 	}
 
@@ -92,7 +89,7 @@ namespace mod {
 
 	std::vector<std::string> BackupHelper::getAllBackups() {
 		std::vector<std::string> fileName;
-		std::filesystem::directory_iterator backList("back\\");
+		std::filesystem::directory_iterator backList("backup\\backup\\");
 		for(auto &ph : backList) {
 			fileName.push_back(ph.path().filename().string());
 		}
@@ -111,34 +108,7 @@ namespace mod {
 		runVanillaCommand("save resume");
 	}
 
-	void BackupHelper::makeBackupInfo(Player *player, std::string note,
-									  std::string size,
-									  double takeTime) {
-		using json = nlohmann::json;
-		using ordered_json = nlohmann::basic_json<nlohmann::ordered_map>;
 
-		ordered_json info_logs;
-		info_logs["logs"] = {
-		{
-			{"Time" , timeNow()},
-			{"Name" , player->getNameTag().c_str()},
-			{"Note" , note},
-			{"Size" , size},
-			{"Take time", std::to_string(takeTime) + "s"}
-			} };
-		std::fstream of_info_logs_file(myString(TEMP_DIR, "info.json"),
-									   std::ios::out);
-		of_info_logs_file << info_logs.dump(4) << std::endl;
-		of_info_logs_file.close();
-	}
-
-
-	void BackupHelper::BackupHelperLog(std::string log) {
-		std::ofstream File;
-		File.open("plugins\\BackupHelperLog\\backuphelper.log",
-				  std::ofstream::app);
-		File << log + "\n\n";
-	}
 
 
 	/*std::string info(Player *p) {

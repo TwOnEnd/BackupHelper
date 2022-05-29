@@ -1,3 +1,6 @@
+#ifndef TOOLS_H
+#define TOOLS_H
+#pragma warning(disable:4996)
 namespace mod {
 	template<typename OS, typename T>
 	void ostr(OS &o, T t) {
@@ -49,6 +52,13 @@ namespace mod {
 			rval += 0;
 		}
 		return rval;
+	}
+
+	auto getNowTime(time_t timestamp = time(NULL)) {
+		char buffer[20] = { 0 };
+		struct tm *info = localtime(&timestamp);
+		strftime(buffer, 20, "%Y-%m-%d %H:%M:%S", info);
+		return string(buffer);
 	}
 
 	void getFileNames(std::string path, std::vector<std::string> &files) {
@@ -118,4 +128,46 @@ namespace mod {
 		str2 = NULL;
 		return strOutUTF8;
 	}
+
+	namespace log {
+
+		void makeBackupInfo(Player *player, std::string note,
+							std::string size,
+							double takeTime) {
+			using json = nlohmann::json;
+			using ordered_json = nlohmann::basic_json<nlohmann::ordered_map>;
+
+			ordered_json info_logs;
+			info_logs["logs"] = {
+			{
+				{"Time" , timeNow()},
+				{"Name" , player->getNameTag().c_str()},
+				{"Note" , note},
+				{"Size" , size},
+				{"Take time", std::to_string(takeTime) + "s"}
+				} };
+			std::fstream of_info_logs_file(myString(TEMP_DIR, "info.json"),
+										   std::ios::out);
+			of_info_logs_file << info_logs.dump(4) << std::endl;
+			of_info_logs_file.close();
+		}
+
+		void infoLog(Player *player) {
+			auto timeNow = getNowTime();
+			auto overwriteTime = myString("Overwrite time: ", timeNow, "\n",
+										  "Confirmed by: ", player->getNameTag().c_str());
+			std::ofstream File;
+			File.open("worlds\\info.txt", std::ofstream::out);
+			File << overwriteTime;
+			File.close();
+		}
+
+		void BackupHelperLog(std::string log) {
+			std::ofstream File;
+			File.open("plugins\\BackupHelperLog\\backuphelper.log",
+					  std::ofstream::app);
+			File << log + "\n\n";
+		}
+	}
 }
+#endif // !TOOLS_H

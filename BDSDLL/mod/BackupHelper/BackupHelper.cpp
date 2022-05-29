@@ -5,7 +5,6 @@ namespace mod {
 								 std::string &_note) {
 		isWorking = true;
 		reBackupName();
-		std::string levelName = getLevelName();
 		std::string playerName = player->getNameTag().c_str();
 
 		level->forEachPlayer([&](Player *player) {
@@ -23,9 +22,12 @@ namespace mod {
 		clock_t start = clock();
 		//Copy Files
 		//CleanTempDir();
-		filesystem::create_directories(TEMP_DIR, ec);
+		std::filesystem::create_directories(TEMP_DIR, ec);
 		ec.clear();
 
+		if(!(_access(myString("worlds\\", worldName, "\\info.json").c_str(), 0) == -1)) {
+			std::filesystem::remove("worlds\\" + worldName + "\\info.json");
+		}
 		std::filesystem::copy("worlds\\" + worldName,
 							  TEMP_DIR + worldName,
 							  std::filesystem::copy_options::recursive, ec);
@@ -66,16 +68,16 @@ namespace mod {
 										 backupSize, "]", backupNum, " [", playerName, "]", note);
 		auto takeTime = (double)(end - start) / CLOCKS_PER_SEC;
 
-		makeBackupInfo(player, _note, backupSize, takeTime);
+		log::makeBackupInfo(player, _note, backupSize, takeTime);
 
-		std::string newName = myString("back\\", allString);
+		std::string newName = myString("backup\\backup\\", allString);
 		std::filesystem::rename(TEMP_DIR, newName);
 
 		std::string a = myString(timeNow(), "\n",
 								 playerName, " make", GBKToUTF8(note),
 								 " | Take time: ", takeTime, "s\n-> ", GBKToUTF8(allString));
 		const std::string log = a;
-		BackupHelperLog(log);
+		log::BackupHelperLog(log);
 
 		level->forEachPlayer([&](Player *_player) {
 			sendMessage(_player, u8"¡ìe" + a);
@@ -89,7 +91,7 @@ namespace mod {
 	void BackupHelper::listBackups(int pag = 1) {
 		reBackupName();
 		std::vector<std::string> backList;
-		std::filesystem::directory_iterator list("back\\");
+		std::filesystem::directory_iterator list("backup\\backup\\");
 		for(auto &ph : list) {
 			backList.insert(backList.begin(), ph.path().filename().u8string());
 		}
@@ -108,7 +110,7 @@ namespace mod {
 
 		std::string a = myString(pag, "/", n, " Pag |",
 								 " Total backups: ", backList.size(), " |",
-								 " Total size: ", getBackupSize("back\\"), "\n");
+								 " Total size: ", getBackupSize("backup\\backup\\"), "\n");
 		for(int i = p; i <= q && i <= backList.size() - 1; i++) {
 			a += "-> " + backList[i] + "\n";
 		}
@@ -138,7 +140,7 @@ namespace mod {
 
 		clock_t start = clock();
 		std::string remove_path = backList[slot - 1];
-		std::filesystem::remove_all("back\\" + remove_path);
+		std::filesystem::remove_all("backup\\backup" + remove_path);
 		Sleep(1000);
 		clock_t end = clock();
 		reBackupName();
@@ -149,7 +151,7 @@ namespace mod {
 								 GBKToUTF8(remove_path));
 
 		const std::string log = a;
-		BackupHelperLog(log);
+		log::BackupHelperLog(log);
 
 		level->forEachPlayer([&](Player *player) {
 			sendMessage(player, u8"¡ìe" + a);
@@ -180,37 +182,39 @@ namespace mod {
 		});
 
 		std::string restore_path = backList[slot - 1];
-		std::string level_name = getLevelName();
+		std::string worldName = getWorldName();
 
-		if(_access(myString("worlds\\_" + level_name).c_str(), 0) == -1) {
-			_mkdir(myString("worlds\\_" + level_name).c_str());
+		if(_access(myString("worlds\\_" + worldName).c_str(), 0) == -1) {
+			_mkdir(myString("worlds\\_" + worldName).c_str());
 		} else {
-			std::filesystem::remove_all(myString("worlds\\_" + level_name).c_str());
-			_mkdir(myString("worlds\\_" + level_name).c_str());
+			std::filesystem::remove_all(myString("worlds\\_" + worldName).c_str());
+			_mkdir(myString("worlds\\_" + worldName).c_str());
 		}
+
+
 
 		std::cout << myString("Start resote backup\tCopying files...") << std::endl;
 
 		clock_t start = clock();
-		std::filesystem::copy("back\\" + restore_path + "\\" + level_name,
-							  "worlds\\_" + level_name,
+		std::filesystem::copy("backup\\backup\\" + restore_path + "\\" + worldName,
+							  "worlds\\_" + worldName,
 							  std::filesystem::copy_options::recursive);
 
-		std::filesystem::copy("back\\" + restore_path + "\\info.json",
-							  "worlds\\_" + level_name,
+		std::filesystem::copy("backup\\backup\\" + restore_path + "\\info.json",
+							  "worlds\\_" + worldName + "\\",
 							  std::filesystem::copy_options::recursive);
 		clock_t end = clock();
 
+		log::infoLog(player);
+
 		auto takeTime = (double)(end - start) / CLOCKS_PER_SEC;
-
 		std::cout << myString("Copy complete | Take time:", takeTime, "s") << std::endl;
-
 		std::string a = myString(timeNow(), "\n", playerName,
 								 " restore [", slot, "] | Take time:", takeTime, "s\n-> ",
 								 GBKToUTF8(restore_path));
 
 		const std::string log = a;
-		BackupHelperLog(log);
+		log::BackupHelperLog(log);
 
 		for(int i = 10; i > 0; i--) {
 			level->forEachPlayer([&](Player *player) {
@@ -229,7 +233,7 @@ namespace mod {
 	void BackupHelper::info() {
 		std::vector<std::string> backList = getAllBackups();
 		std::string a = myString("Total backups: ", backList.size(),
-								 " | Total size: ", getBackupSize("back\\"), "\n\n");
+								 " | Total size: ", getBackupSize("backup\\backup\\"), "\n\n");
 		sendMessage(player, a);
 	}
 
@@ -240,22 +244,6 @@ namespace mod {
 		std::string url_github = "Github:https://github.com/TwOnEnd/BackupHelper";
 		std::string info = myString(TwOnEnd, TwOnEnd_Email, url_github);
 		sendMessage(player, info);
-	}
-
-
-	void BackupHelper::_restore() {
-		Config config("server.properties");
-		std::string reboot_name = config.Read<std::string>("reboot-name");
-		std::cout << "1";
-		std::string level_name = getLevelName();
-		std::string ph = "worlds\\" + level_name;
-		std::cout << "2";
-		std::filesystem::remove_all(ph);
-		std::cout << "3";
-		std::filesystem::rename("worlds\\_" + level_name, "worlds\\" + level_name);
-		std::cout << "4\n";
-		Sleep(1000);
-		system(reboot_name.c_str());
 	}
 
 
