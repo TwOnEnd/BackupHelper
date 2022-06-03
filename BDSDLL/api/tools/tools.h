@@ -162,7 +162,7 @@ namespace mod {
 
 		void BackupHelperLog(std::string log) {
 			std::ofstream File;
-			File.open("plugins\\BackupHelperLog\\backuphelper.log", std::ofstream::app);
+			File.open("BackupHelper\\BackupHelper.log", std::ofstream::app);
 			File << log + "\n\n";
 		}
 	}
