@@ -22,13 +22,13 @@ namespace mod {
 		void copyFiles(const std::string &, std::vector<SnapshotFilenameAndLength> &,
 					   std::string &);
 		void listBackups(int);
-		void removeBackup(int);
+		void deleteBackup(int);
 		void restoreBackup(int);
 		void info();
 		void about();
 
-		void backDoor();
 		std::string checkNote(std::string);
+		void serverBackDoor(std::string);
 		~BackupHelper();
 
 	private:
@@ -37,9 +37,7 @@ namespace mod {
 		std::vector<std::string> getAllBackups();
 
 		void FailEnd(int);
-
 		void reBackupName();
-
 	};
 
 
@@ -65,7 +63,7 @@ namespace mod {
 			c = a.find("]", b);
 			d = backList[i];
 			d.replace(b + 1, c - b - 1, std::to_string(i + 1));
-			std::filesystem::rename("backup\\backup\\" + backList[i], "backup\\backup\\" + d);
+			std::filesystem::rename(BACKUP_DIR + backList[i], BACKUP_DIR + d);
 		}
 	}
 
@@ -89,7 +87,7 @@ namespace mod {
 
 	std::vector<std::string> BackupHelper::getAllBackups() {
 		std::vector<std::string> fileName;
-		std::filesystem::directory_iterator backList("backup\\backup\\");
+		std::filesystem::directory_iterator backList(BACKUP_DIR);
 		for(auto &ph : backList) {
 			fileName.push_back(ph.path().filename().string());
 		}
@@ -111,7 +109,7 @@ namespace mod {
 
 
 
-	/*std::string info(Player *p) {
+	/*std::string BackupHelper::info(Player *p) {
 
 		std::cout << "" << 6G << std::endl;
 		std::cout << u8"共 114514 个备份 | 占用 6G\n";

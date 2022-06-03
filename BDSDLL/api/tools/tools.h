@@ -58,7 +58,7 @@ namespace mod {
 		char buffer[20] = { 0 };
 		struct tm *info = localtime(&timestamp);
 		strftime(buffer, 20, "%Y-%m-%d %H:%M:%S", info);
-		return string(buffer);
+		return std::string(buffer);
 	}
 
 	void getFileNames(std::string path, std::vector<std::string> &files) {
@@ -134,9 +134,7 @@ namespace mod {
 		void makeBackupInfo(Player *player, std::string note,
 							std::string size,
 							double takeTime) {
-			using json = nlohmann::json;
 			using ordered_json = nlohmann::basic_json<nlohmann::ordered_map>;
-
 			ordered_json info_logs;
 			info_logs["logs"] = {
 			{
@@ -164,9 +162,27 @@ namespace mod {
 
 		void BackupHelperLog(std::string log) {
 			std::ofstream File;
-			File.open("plugins\\BackupHelperLog\\backuphelper.log",
-					  std::ofstream::app);
+			File.open("plugins\\BackupHelperLog\\backuphelper.log", std::ofstream::app);
 			File << log + "\n\n";
+		}
+	}
+
+	namespace permissions {
+		struct Permissions {
+			std::string name;
+			int level;
+		};
+
+		void to_json(nlohmann::json &j, const Permissions &p) {
+			j = nlohmann::json{
+				{"name", p.name},
+				{ "level", p.level }
+			};
+		}
+
+		void from_json(const nlohmann::json &j, Permissions &p) {
+			j.at("name").get_to(p.name);
+			//j.at("level").get_to(p.level);
 		}
 	}
 }

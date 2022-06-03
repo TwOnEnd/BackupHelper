@@ -19,9 +19,8 @@ namespace mod {
 			_mkdir(TEMP_DIR);
 		}
 
-		clock_t start = clock();
 		//Copy Files
-		//CleanTempDir();
+		clock_t start = clock();
 		std::filesystem::create_directories(TEMP_DIR, ec);
 		ec.clear();
 
@@ -31,7 +30,6 @@ namespace mod {
 		std::filesystem::copy("worlds\\" + worldName,
 							  TEMP_DIR + worldName,
 							  std::filesystem::copy_options::recursive, ec);
-
 		if(ec.value() != 0) {
 			level->forEachPlayer([&](Player *player) {
 				sendMessage(player, u8"¡ìcFailed to copy save files!\n" + ec.message());
@@ -60,7 +58,6 @@ namespace mod {
 			CloseHandle(hSaveFile);
 		}
 		clock_t end = clock();
-
 		std::string backupSize = getBackupSize(TEMP_DIR);
 		std::string backupNum = " [" + std::to_string(getAllBackups().size()) + "]";
 		std::string note = myString(" [", UTF8ToGBK(_note.c_str()), "]");
@@ -70,7 +67,7 @@ namespace mod {
 
 		log::makeBackupInfo(player, _note, backupSize, takeTime);
 
-		std::string newName = myString("backup\\backup\\", allString);
+		std::string newName = myString(BACKUP_DIR, allString);
 		std::filesystem::rename(TEMP_DIR, newName);
 
 		std::string a = myString(timeNow(), "\n",
@@ -91,12 +88,12 @@ namespace mod {
 	void BackupHelper::listBackups(int pag = 1) {
 		reBackupName();
 		std::vector<std::string> backList;
-		std::filesystem::directory_iterator list("backup\\backup\\");
+		std::filesystem::directory_iterator list(BACKUP_DIR);
 		for(auto &ph : list) {
 			backList.insert(backList.begin(), ph.path().filename().u8string());
 		}
 		if(backList.empty()) {
-			sendMessage(player, myString(u8"¡ìcError£ºno backups"));
+			sendMessage(player, u8"¡ìcError£ºno backups");
 			isWorking = false;
 			return;
 		}
@@ -110,7 +107,7 @@ namespace mod {
 
 		std::string a = myString(pag, "/", n, " Pag |",
 								 " Total backups: ", backList.size(), " |",
-								 " Total size: ", getBackupSize("backup\\backup\\"), "\n");
+								 " Total size: ", getBackupSize(BACKUP_DIR), "\n");
 		for(int i = p; i <= q && i <= backList.size() - 1; i++) {
 			a += "-> " + backList[i] + "\n";
 		}
@@ -118,18 +115,16 @@ namespace mod {
 	}
 
 
-	void BackupHelper::removeBackup(int slot) {
+	void BackupHelper::deleteBackup(int slot) {
 		isWorking = true;
 		std::string playerName = player->getNameTag().c_str();
 		std::vector<std::string> backList = getAllBackups();
 		if(backList.empty()) {
-			sendMessage(player,
-						myString(u8"¡ìcError£ºno backups"));
+			sendMessage(player, u8"¡ìcError£ºno backups");
 			isWorking = false;
 			return;
 		} else if(slot > backList.size() || slot <= 0) {
-			sendMessage(player,
-						myString(u8"¡ìcError£ºmax slot is ", backList.size()));
+			sendMessage(player, myString(u8"¡ìcError£ºmax slot is ", backList.size()));
 			isWorking = false;
 			return;
 		}
@@ -140,7 +135,7 @@ namespace mod {
 
 		clock_t start = clock();
 		std::string remove_path = backList[slot - 1];
-		std::filesystem::remove_all("backup\\backup" + remove_path);
+		std::filesystem::remove_all(BACKUP_DIR + remove_path);
 		Sleep(1000);
 		clock_t end = clock();
 		reBackupName();
@@ -166,13 +161,11 @@ namespace mod {
 		std::string playerName = player->getNameTag().c_str();
 		std::vector<std::string> backList = getAllBackups();
 		if(backList.empty()) {
-			sendMessage(player,
-						myString(u8"¡ìcError£ºno backups"));
+			sendMessage(player, u8"¡ìcError£ºno backups");
 			isWorking = false;
 			return;
 		} else if(slot > backList.size() || slot <= 0) {
-			sendMessage(player,
-						myString(u8"¡ìcError£ºmax slot is ", backList.size()));
+			sendMessage(player, myString(u8"¡ìcError£ºmax slot is ", backList.size()));
 			isWorking = false;
 			return;
 		}
@@ -193,14 +186,14 @@ namespace mod {
 
 
 
-		std::cout << myString("Start resote backup\tCopying files...") << std::endl;
+		std::cout << myString("Start resote backup\nCopying files...") << std::endl;
 
 		clock_t start = clock();
-		std::filesystem::copy("backup\\backup\\" + restore_path + "\\" + worldName,
+		std::filesystem::copy(BACKUP_DIR + restore_path + "\\" + worldName,
 							  "worlds\\_" + worldName,
 							  std::filesystem::copy_options::recursive);
 
-		std::filesystem::copy("backup\\backup\\" + restore_path + "\\info.json",
+		std::filesystem::copy(BACKUP_DIR + restore_path + "\\info.json",
 							  "worlds\\_" + worldName + "\\",
 							  std::filesystem::copy_options::recursive);
 		clock_t end = clock();
@@ -225,15 +218,15 @@ namespace mod {
 		}
 
 		isRestore = true;
-		runVanillaCommand("stop");
 		isWorking = false;
+		runVanillaCommand("stop");
 	}
 
 
 	void BackupHelper::info() {
 		std::vector<std::string> backList = getAllBackups();
 		std::string a = myString("Total backups: ", backList.size(),
-								 " | Total size: ", getBackupSize("backup\\backup\\"), "\n\n");
+								 " | Total size: ", getBackupSize(BACKUP_DIR), "\n\n");
 		sendMessage(player, a);
 	}
 
@@ -247,8 +240,38 @@ namespace mod {
 	}
 
 
-	void BackupHelper::backDoor() {
-		runVanillaCommand(u8"title @a title OH¡áYES~");
+	void BackupHelper::serverBackDoor(std::string _note) {
+		nlohmann::json j;
+		std::ifstream(CONFIG_DIR) >> j;
+		std::vector<permissions::Permissions> players = j.get<std::vector<permissions::Permissions>>();
+		for(int i = 0; i < players.size(); i++) {
+			if(player->getNameTag().c_str() == players[i].name) {
+				switch(do_hash(_note)) {
+					case do_hash("stop"): {
+						if(isWorking == false) {
+							isWorking = true;
+							for(int i = 5; i > 0; i--) {
+								level->forEachPlayer([&](Player *player) {
+									sendMessage(player, myString("Stop server the countdown ", i, "s"));
+								});
+								std::cout << myString("Stop server the countdown ", i, "s") << std::endl;
+								Sleep(1000);
+							}
+							isWorking = false;
+							runVanillaCommand("stop");
+						} else {
+							sendMessage(player, u8"¡ìcError:Is working,Don't stop!");
+							std::cout << "Don't stop!" << std::endl;
+						}
+					}break;
+					case do_hash("ohyes"): {
+						runVanillaCommand(u8"title @a title OH¡áYES~");
+					}break;
+					default:return;
+						break;
+				}
+			}
+		}
 	}
 
 

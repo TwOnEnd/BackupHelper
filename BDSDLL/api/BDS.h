@@ -31,10 +31,6 @@ namespace mod {
 	};
 
 	struct Level {
-		int getSeed() {
-			return SYMCALL(int, Level_getSeed, this);
-		}
-
 		void forEachPlayer(const std::function<void(Player *)> &todo) {
 			auto f = [&](Player &actor) {
 				todo(&actor);
@@ -65,5 +61,6 @@ namespace mod {
 		}
 		return false;
 	}
+
 }
 #endif BDS_H

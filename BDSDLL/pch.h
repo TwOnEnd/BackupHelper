@@ -34,8 +34,11 @@
 #pragma warning(disable:4996)
 #pragma warning(disable:4267)
 #pragma warning(disable:4244)
-
-#define TEMP_DIR "backup\\backup\\temp\\"
+// 宏定义
+#define BACKUP_DIR "BackupHelper\\backup\\"
+#define TEMP_DIR "BackupHelper\\backup\\temp\\"
+//#define AUTO_BACKUP_DIR "BackupHelper\\backup\\auto\\"
+#define CONFIG_DIR "BackupHelper\\config.json"
 
 //----------------------------------
 // 基本类型定义

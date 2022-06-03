@@ -38,17 +38,6 @@ constexpr RVA Level_tick = 0x00A75A30;
 // [符号] ?forEachPlayer@Level@@QEAAXV?$function@$$A6A_NAEAVPlayer@@@Z@std@@@Z
 constexpr RVA Level_forEachPlayer = 0x00A7C780;
 
-
-
-
-
-
-
-
-// [原型] public: unsigned int __cdecl Level::getSeed(void) __ptr64
-// [符号] ?getSeed@Level@@QEAAIXZ
-constexpr RVA Level_getSeed = 0x00A79F50;
-
 // [原型] public: virtual class std::vector<struct SnapshotFilenameAndLength,class std::allocator<struct SnapshotFilenameAndLength> > __cdecl DBStorage::createSnapshot(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
 // [符号] ?createSnapshot@DBStorage@@UEAA?AV?$vector@USnapshotFilenameAndLength@@V?$allocator@USnapshotFilenameAndLength@@@std@@@std@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@3@@Z
 constexpr RVA DBStorage_createSnapshot = 0x00B4C1E0;
