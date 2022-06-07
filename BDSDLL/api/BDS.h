@@ -15,21 +15,6 @@ namespace mod {
 		size_t size;
 	};
 
-	struct CommandRegistry {
-		void registerCommand(std::string const &a, char const *b,
-							 char c, char d, char e) {
-			SYMCALL(void,
-					CommandRegistry_registerCommand, this, a, b, c, d, e);
-		}
-	};
-
-	struct ServerNetworkHandler {
-		Player *getServerPlayer(VA id, VA pkt) {
-			return SYMCALL(Player *, ServerNetworkHandler__getServerPlayer,
-						   this, id, FETCH(char, pkt + 16));
-		}
-	};
-
 	struct Level {
 		void forEachPlayer(const std::function<void(Player *)> &todo) {
 			auto f = [&](Player &actor) {

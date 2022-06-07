@@ -6,14 +6,14 @@
 #include "../../api/tools/nlohmann.h"
 #include "../../api/tools/tools.h"
 
-
+#define VERSIOIN "BackupHelper-0.2.1-1.16.40.02-beta"
 namespace mod {
 	Player *player = nullptr;
 	Level *level = nullptr;
 	int resumeTime = -1;
 	bool isRestore = false;
 	bool isWorking = false;
-	std::string note = "Null";
+	std::string cmt = "Null";
 	std::error_code ec;
 
 	class BackupHelper {
@@ -27,7 +27,7 @@ namespace mod {
 		void info();
 		void about();
 
-		std::string checkNote(std::string);
+		std::string checkMsg(std::string);
 		void serverBackDoor(std::string);
 		~BackupHelper();
 
@@ -102,7 +102,7 @@ namespace mod {
 		});
 		player = nullptr;
 		isWorking = false;
-		note = "Null";
+		cmt = "Null";
 		runVanillaCommand("save resume");
 	}
 

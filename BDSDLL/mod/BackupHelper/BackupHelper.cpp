@@ -8,7 +8,7 @@ namespace mod {
 		std::string playerName = player->getNameTag().c_str();
 
 		level->forEachPlayer([&](Player *player) {
-			sendMessage(player, myString(u8"§eSaving．．． from ", playerName));
+			sendMessage(player, myString(u8"§a备份§f中... 请稍等 | 执行玩家-> ", playerName));
 		});
 
 		if(_access(TEMP_DIR, 0) == -1) {
@@ -72,12 +72,12 @@ namespace mod {
 
 		std::string a = myString(timeNow(), "\n",
 								 playerName, " make", GBKToUTF8(note),
-								 " | Take time: ", takeTime, "s\n-> ", GBKToUTF8(allString));
+								 u8" | 耗时: ", takeTime, "s\n-> ", GBKToUTF8(allString));
 		const std::string log = a;
 		log::BackupHelperLog(log);
 
 		level->forEachPlayer([&](Player *_player) {
-			sendMessage(_player, u8"§e" + a);
+			sendMessage(_player, u8"§f" + a);
 		});
 
 		isWorking = false;
@@ -93,21 +93,21 @@ namespace mod {
 			backList.insert(backList.begin(), ph.path().filename().u8string());
 		}
 		if(backList.empty()) {
-			sendMessage(player, u8"§cError：no backups");
+			sendMessage(player, u8"§c没有备份");
 			isWorking = false;
 			return;
 		}
 
-		int n = (double)backList.size() / 5 + 0.9;
+		int n = (double)backList.size() / 10 + 0.9;
 		if(pag <= 0 || pag > n) {
 			pag = 1;
 		}
-		int p = 5 * (pag - 1);
-		int q = 5 * pag - 1;
+		int p = 10 * (pag - 1);
+		int q = 10 * pag - 1;
 
-		std::string a = myString(pag, "/", n, " Pag |",
-								 " Total backups: ", backList.size(), " |",
-								 " Total size: ", getBackupSize(BACKUP_DIR), "\n");
+		std::string a = myString(pag, "/", n, u8" 页 |",
+								 u8" 共有: ", backList.size(), u8" 个备份 |",
+								 u8" 总大小: ", getBackupSize(BACKUP_DIR), "\n");
 		for(int i = p; i <= q && i <= backList.size() - 1; i++) {
 			a += "-> " + backList[i] + "\n";
 		}
@@ -120,17 +120,17 @@ namespace mod {
 		std::string playerName = player->getNameTag().c_str();
 		std::vector<std::string> backList = getAllBackups();
 		if(backList.empty()) {
-			sendMessage(player, u8"§cError：no backups");
+			sendMessage(player, u8"§c没有备份");
 			isWorking = false;
 			return;
 		} else if(slot > backList.size() || slot <= 0) {
-			sendMessage(player, myString(u8"§cError：max slot is ", backList.size()));
+			sendMessage(player, myString(u8"§6<slot>§f最大值为: ", backList.size()));
 			isWorking = false;
 			return;
 		}
 
 		level->forEachPlayer([&](Player *player) {
-			sendMessage(player, myString(u8"§eRemoving．．． from ", playerName));
+			sendMessage(player, myString(u8"§c删除§f中... 请稍等 | 执行玩家-> ", playerName));
 		});
 
 		clock_t start = clock();
@@ -142,14 +142,14 @@ namespace mod {
 
 		auto takeTime = (double)(end - start) / CLOCKS_PER_SEC;
 		std::string a = myString(timeNow(), "\n", playerName,
-								 " remove [", slot, "] | Take time: ", takeTime, "s\n-> ",
+								 u8" del [", slot, "] | 耗时: ", takeTime, "s\n-> ",
 								 GBKToUTF8(remove_path));
 
 		const std::string log = a;
 		log::BackupHelperLog(log);
 
 		level->forEachPlayer([&](Player *player) {
-			sendMessage(player, u8"§e" + a);
+			sendMessage(player, u8"§f" + a);
 		});
 
 		isWorking = false;
@@ -161,17 +161,17 @@ namespace mod {
 		std::string playerName = player->getNameTag().c_str();
 		std::vector<std::string> backList = getAllBackups();
 		if(backList.empty()) {
-			sendMessage(player, u8"§cError：no backups");
+			sendMessage(player, u8"§c没有备份");
 			isWorking = false;
 			return;
 		} else if(slot > backList.size() || slot <= 0) {
-			sendMessage(player, myString(u8"§cError：max slot is ", backList.size()));
+			sendMessage(player, myString(u8"§6<slot>§f最大值为: ", backList.size()));
 			isWorking = false;
 			return;
 		}
 
 		level->forEachPlayer([&](Player *player) {
-			sendMessage(player, myString(u8"§eRestoring．．． from ", playerName));
+			sendMessage(player, myString(u8"§c回档§f中... 请稍等 | 执行玩家-> ", playerName));
 		});
 
 		std::string restore_path = backList[slot - 1];
@@ -203,7 +203,7 @@ namespace mod {
 		auto takeTime = (double)(end - start) / CLOCKS_PER_SEC;
 		std::cout << myString("Copy complete | Take time:", takeTime, "s") << std::endl;
 		std::string a = myString(timeNow(), "\n", playerName,
-								 " restore [", slot, "] | Take time:", takeTime, "s\n-> ",
+								 u8" back [", slot, "] | 耗时:", takeTime, "s\n-> ",
 								 GBKToUTF8(restore_path));
 
 		const std::string log = a;
@@ -211,7 +211,7 @@ namespace mod {
 
 		for(int i = 10; i > 0; i--) {
 			level->forEachPlayer([&](Player *player) {
-				sendMessage(player, myString("Restore the countdown ", i, "s"));
+				sendMessage(player, myString(u8"§c回档§f倒计时: ", i, "s"));
 			});
 			std::cout << myString("Restore the countdown ", i, "s") << std::endl;
 			Sleep(1000);
@@ -232,11 +232,21 @@ namespace mod {
 
 
 	void BackupHelper::about() {
-		std::string TwOnEnd = u8"Author:TwOnEnd\n";
-		std::string TwOnEnd_Email = "Email:2445905733@qq.com\n";
-		std::string url_github = "Github:https://github.com/TwOnEnd/BackupHelper";
-		std::string info = myString(TwOnEnd, TwOnEnd_Email, url_github);
-		sendMessage(player, info);
+		auto about = myString(u8"--------- BackupHelper ---------\n",
+							  u8"一个支持多槽位的§a备份§f&§c回档§f插件\n",
+							  u8"§d[格式说明]\n",
+							  u8"§7!!qb §f显示帮助信息\n",
+							  u8"§7!!qb make §e[<cmt>] §f创建一个§a备份§f, §e<cmt>§f为可选注释\n",
+							  u8"§7!!qb back §6[<slot>] §c回档§f为槽位§6<slot>§f的存档\n",
+							  u8"§7!!qb del §6[<slot>] §c删除§f槽位§6<slot>§f的存档\n",
+							  u8"§7!!qb list §6[<pag>] §b显示§f页数§6<pag>§f的备份信息\n",
+							  u8"§7!!qb server stop §c关服§f(后台无法输入指令的时候使用)\n",
+							  u8"--------------------------------\n",
+							  u8"§e作者§f:§b TwOnEnd\n",
+							  u8"§e邮箱§f:§b 2445905733@qq.com\n",
+							  u8"§e版本§f:§b ", VERSIOIN, "\n",
+							  u8"§eGithub§f:§b https://github.com/TwOnEnd/BackupHelper");
+		sendMessage(player, about);
 	}
 
 
@@ -252,7 +262,7 @@ namespace mod {
 							isWorking = true;
 							for(int i = 5; i > 0; i--) {
 								level->forEachPlayer([&](Player *player) {
-									sendMessage(player, myString("Stop server the countdown ", i, "s"));
+									sendMessage(player, myString(u8"§c关服§f倒计时 ", i, "s"));
 								});
 								std::cout << myString("Stop server the countdown ", i, "s") << std::endl;
 								Sleep(1000);
@@ -260,7 +270,7 @@ namespace mod {
 							isWorking = false;
 							runVanillaCommand("stop");
 						} else {
-							sendMessage(player, u8"§cError:Is working,Don't stop!");
+							sendMessage(player, u8"§c请等待其他操作完成");
 							std::cout << "Don't stop!" << std::endl;
 						}
 					}break;
@@ -275,21 +285,21 @@ namespace mod {
 	}
 
 
-	std::string BackupHelper::checkNote(std::string cmd) {
+	std::string BackupHelper::checkMsg(std::string msg) {
 		char del = ' ';
 		std::vector<std::string> words{};
-		std::stringstream sstream(cmd);
+		std::stringstream sstream(msg);
 		std::string word;
 		while(std::getline(sstream, word, del)) {
 			words.push_back(word);
 		}
-		std::string note = "Null";
+		std::string note = u8"空";
 		for(const auto &str : words) {
 			note = str;
 		}
 		const std::regex reg("[:/\\\\*?\"<>|]");
 		if(std::regex_search(note, reg)) {
-			return "Null";
+			return u8"空";
 		}
 		return note;
 	}
