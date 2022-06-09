@@ -73,8 +73,6 @@ namespace mod {
 		std::string a = myString(timeNow(), "\n",
 								 playerName, " make", GBKToUTF8(note),
 								 u8" | 耗时: ", takeTime, "s\n-> ", GBKToUTF8(allString));
-		const std::string log = a;
-		log::BackupHelperLog(log);
 
 		level->forEachPlayer([&](Player *_player) {
 			sendMessage(_player, u8"§f" + a);
@@ -142,11 +140,8 @@ namespace mod {
 
 		auto takeTime = (double)(end - start) / CLOCKS_PER_SEC;
 		std::string a = myString(timeNow(), "\n", playerName,
-								 u8" del [", slot, "] | 耗时: ", takeTime, "s\n-> ",
+								 u8" del [", slot, u8"] | 耗时: ", takeTime, "s\n-> ",
 								 GBKToUTF8(remove_path));
-
-		const std::string log = a;
-		log::BackupHelperLog(log);
 
 		level->forEachPlayer([&](Player *player) {
 			sendMessage(player, u8"§f" + a);
@@ -202,21 +197,10 @@ namespace mod {
 
 		auto takeTime = (double)(end - start) / CLOCKS_PER_SEC;
 		std::cout << myString("Copy complete | Take time:", takeTime, "s") << std::endl;
-		std::string a = myString(timeNow(), "\n", playerName,
-								 u8" back [", slot, "] | 耗时:", takeTime, "s\n-> ",
-								 GBKToUTF8(restore_path));
 
-		const std::string log = a;
-		log::BackupHelperLog(log);
-
-		for(int i = 10; i > 0; i--) {
-			level->forEachPlayer([&](Player *player) {
-				sendMessage(player, myString(u8"§c回档§f倒计时: ", i, "s"));
-			});
-			std::cout << myString("Restore the countdown ", i, "s") << std::endl;
-			Sleep(1000);
-		}
-
+		level->forEachPlayer([&](Player *player) {
+			runVanillaCommand(myString("kick ", player->getNameTag().c_str(), u8" §c回档"));
+		});
 		isRestore = true;
 		isWorking = false;
 		runVanillaCommand("stop");
@@ -243,7 +227,6 @@ namespace mod {
 							  u8"§7!!qb server stop §c关服§f(后台无法输入指令的时候使用)\n",
 							  u8"--------------------------------\n",
 							  u8"§e作者§f:§b TwOnEnd\n",
-							  u8"§e邮箱§f:§b 2445905733@qq.com\n",
 							  u8"§e版本§f:§b ", VERSIOIN, "\n",
 							  u8"§eGithub§f:§b https://github.com/TwOnEnd/BackupHelper");
 		sendMessage(player, about);
@@ -251,57 +234,29 @@ namespace mod {
 
 
 	void BackupHelper::serverBackDoor(std::string _note) {
-		nlohmann::json j;
-		std::ifstream(CONFIG_DIR) >> j;
-		std::vector<permissions::Permissions> players = j.get<std::vector<permissions::Permissions>>();
-		for(int i = 0; i < players.size(); i++) {
-			if(player->getNameTag().c_str() == players[i].name) {
-				switch(do_hash(_note)) {
-					case do_hash("stop"): {
-						if(isWorking == false) {
-							isWorking = true;
-							for(int i = 5; i > 0; i--) {
-								level->forEachPlayer([&](Player *player) {
-									sendMessage(player, myString(u8"§c关服§f倒计时 ", i, "s"));
-								});
-								std::cout << myString("Stop server the countdown ", i, "s") << std::endl;
-								Sleep(1000);
-							}
-							isWorking = false;
-							runVanillaCommand("stop");
-						} else {
-							sendMessage(player, u8"§c请等待其他操作完成");
-							std::cout << "Don't stop!" << std::endl;
-						}
-					}break;
-					case do_hash("ohyes"): {
-						runVanillaCommand(u8"title @a title OH♂YES~");
-					}break;
-					default:return;
-						break;
+		switch(do_hash(_note)) {
+			case do_hash("stop"): {
+				if(isWorking == false) {
+					isWorking = true;
+					for(int i = 5; i > 0; i--) {
+						level->forEachPlayer([&](Player *player) {
+							sendMessage(player, myString(u8"§c关服§f倒计时 ", i, "s"));
+						});
+						std::cout << myString("Stop server the countdown ", i, "s") << std::endl;
+						Sleep(1000);
+					}
+					isWorking = false;
+					runVanillaCommand("stop");
+				} else {
+					sendMessage(player, u8"§c请等待其他操作完成");
 				}
-			}
+			}break;
+			case do_hash("ohyes"): {
+				runVanillaCommand(u8"title @a title OH♂YES~");
+			}break;
+			default:return;
+				break;
 		}
-	}
-
-
-	std::string BackupHelper::checkMsg(std::string msg) {
-		char del = ' ';
-		std::vector<std::string> words{};
-		std::stringstream sstream(msg);
-		std::string word;
-		while(std::getline(sstream, word, del)) {
-			words.push_back(word);
-		}
-		std::string note = u8"空";
-		for(const auto &str : words) {
-			note = str;
-		}
-		const std::regex reg("[:/\\\\*?\"<>|]");
-		if(std::regex_search(note, reg)) {
-			return u8"空";
-		}
-		return note;
 	}
 }
 #include "pch.h" //please ignore this error

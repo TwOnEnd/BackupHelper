@@ -61,6 +61,25 @@ namespace mod {
 		return std::string(buffer);
 	}
 
+	std::string checkMsg(std::string msg) {
+		char del = ' ';
+		std::vector<std::string> words{};
+		std::stringstream sstream(msg);
+		std::string word;
+		while(std::getline(sstream, word, del)) {
+			words.push_back(word);
+		}
+		std::string note = u8"空";
+		for(const auto &str : words) {
+			note = str;
+		}
+		const std::regex reg("[:/\\\\*?\"<>|]");
+		if(std::regex_search(note, reg)) {
+			return u8"空";
+		}
+		return note;
+	}
+
 	void getFileNames(std::string path, std::vector<std::string> &files) {
 		//文件句柄
 		//注意：我发现有些文章代码此处是long类型，实测运行中会报错访问异常
@@ -80,6 +99,42 @@ namespace mod {
 				}
 			} while(_findnext(hFile, &fileinfo) == 0);
 			_findclose(hFile);
+		}
+	}
+
+	bool checkDiskSpace(std::string str_disk_name) {
+		DWORD64 qwFreeBytesToCaller = 0;
+		DWORD64 qwTotalBytes = 0;
+		DWORD64 qwFreeBytes = 0;
+
+		///使用GetDiskFreeSpaceEx获取磁盘信息并打印结果
+		BOOL bResult = GetDiskFreeSpaceExA(str_disk_name.c_str(),
+										   (PULARGE_INTEGER)&qwFreeBytesToCaller,
+										   (PULARGE_INTEGER)&qwTotalBytes,
+										   (PULARGE_INTEGER)&qwFreeBytes);
+		/// 读取成功
+		if(bResult) {
+			Config config("server.properties");
+			std::string worldName = config.Read<std::string>("level-name");
+			float fsize = 0;
+			std::string ssize;
+			std::vector<std::string> file_name;
+			std::string path("worlds\\" + worldName);
+			getFileNames(path, file_name);
+			for(const auto &ph : file_name) {
+				fsize += std::filesystem::file_size(ph);
+			}
+			fsize /= (1024 * 1024 * 1024);
+			qwFreeBytesToCaller /= (1024 * 1024 * 1024);
+			/*printf("可获得的空闲空间（字节）: \t%I64d\n", qwFreeBytesToCaller);
+			printf("空闲空间（字节）: \t\t%I64d\n", qwFreeBytes);
+			printf("磁盘总容量（字节）: \t\t%I64d\n", qwTotalBytes);*/
+			if((qwFreeBytesToCaller - 2) <= fsize) {
+				return false;
+			}
+			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -158,31 +213,6 @@ namespace mod {
 			File.open("worlds\\info.txt", std::ofstream::out);
 			File << overwriteTime;
 			File.close();
-		}
-
-		void BackupHelperLog(std::string log) {
-			std::ofstream File;
-			File.open("BackupHelper\\BackupHelper.log", std::ofstream::app);
-			File << log + "\n\n";
-		}
-	}
-
-	namespace permissions {
-		struct Permissions {
-			std::string name;
-			int level;
-		};
-
-		void to_json(nlohmann::json &j, const Permissions &p) {
-			j = nlohmann::json{
-				{"name", p.name},
-				{ "level", p.level }
-			};
-		}
-
-		void from_json(const nlohmann::json &j, Permissions &p) {
-			j.at("name").get_to(p.name);
-			//j.at("level").get_to(p.level);
 		}
 	}
 }

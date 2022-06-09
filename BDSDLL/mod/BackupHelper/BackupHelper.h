@@ -6,7 +6,7 @@
 #include "../../api/tools/nlohmann.h"
 #include "../../api/tools/tools.h"
 
-#define VERSIOIN "BackupHelper-0.2.1-1.16.40.02-beta"
+#define VERSIOIN "BackupHelper-0.2.1-1.18.33-beta"
 namespace mod {
 	Player *player = nullptr;
 	Level *level = nullptr;
@@ -16,10 +16,12 @@ namespace mod {
 	std::string cmt = "Null";
 	std::error_code ec;
 
-	class BackupHelper {
+	class BackupHelper
+	{
 	public:
 		BackupHelper();
-		void copyFiles(const std::string &, std::vector<SnapshotFilenameAndLength> &,
+		void copyFiles(const std::string &,
+					   std::vector<SnapshotFilenameAndLength> &,
 					   std::string &);
 		void listBackups(int);
 		void deleteBackup(int);
@@ -27,7 +29,6 @@ namespace mod {
 		void info();
 		void about();
 
-		std::string checkMsg(std::string);
 		void serverBackDoor(std::string);
 		~BackupHelper();
 
@@ -41,8 +42,7 @@ namespace mod {
 	};
 
 
-	BackupHelper::BackupHelper() {
-	}
+	BackupHelper::BackupHelper() { }
 
 
 	std::string BackupHelper::getWorldName() {
@@ -106,26 +106,6 @@ namespace mod {
 		runVanillaCommand("save resume");
 	}
 
-
-
-
-	/*std::string BackupHelper::info(Player *p) {
-
-		std::cout << "" << 6G << std::endl;
-		std::cout << u8"共 114514 个备份 | 占用 6G\n";
-
-		std::cout << u8"上次创建备份信息 | TwOnEnd\n";
-		std::cout << "[time][size][slot][player][note]\n";
-
-		std::cout << u8"上次删除备份信息 | TwOnEnd\n";
-		std::cout << "[time][size][slot][player][note]\n";
-
-		std::cout << u8"上次回档备份信息 | TwOnEnd\n";
-		std::cout << "[time][size][slot][player][note]\n";
-		return "";
-	}*/
-
-	BackupHelper::~BackupHelper() {
-	}
+	BackupHelper::~BackupHelper() { }
 }
 #endif // !BACKUPHELPER_H

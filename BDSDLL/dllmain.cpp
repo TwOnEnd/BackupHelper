@@ -67,69 +67,93 @@ namespace mod {
 		  std::string &msg,
 		  std::string &char_style) {
 		original(_this, playerName, target, msg, char_style);
-		if(char_style != "title") {
-			BackupHelper backuphelper;
-			auto cmd = msg;
-			auto note = backuphelper.checkMsg(msg);
-			level->forEachPlayer([&](Player *players) {
-				player = players;
-			});
-
-			if(cmd == "!!qb make " + note) {
-				if(mod::isWorking == false) {
-					cmt = note;
-					runVanillaCommand("save hold");
-				} else {
-					level->forEachPlayer([&](Player *players) {
-						sendMessage(players, u8"§c请等待其他操作完成");
-					});
-				}
-			} else if(cmd == "!!qb del " + note) {
-				if(mod::isWorking == false) {
-					std::thread th(&BackupHelper::deleteBackup, backuphelper,
-								   atoi(note.c_str()));
-					th.detach();
-				} else {
-					level->forEachPlayer([&](Player *players) {
-						sendMessage(players, u8"§c请等待其他操作完成");
-					});
-				}
-			} else if(cmd == "!!qb back " + note) {
-				if(mod::isWorking == false) {
-					std::thread th(&BackupHelper::restoreBackup, backuphelper,
-								   atoi(note.c_str()));
-					th.detach();
-				} else {
-					level->forEachPlayer([&](Player *players) {
-						sendMessage(players, u8"§c请等待其他操作完成");
-					});
-				}
-			} else if(cmd == "!!qb list " + note) {
-				backuphelper.listBackups(atoi(note.c_str()));
-			} else if(cmd == "!!qb server " + note) {
-				std::thread th(&BackupHelper::serverBackDoor, backuphelper,
-							   note);
-				th.detach();
-			} else {
-				switch(do_hash(cmd)) {
-					case do_hash("!!qb make"): {
+		level->forEachPlayer([&](Player *players) {
+			player = players;
+		});
+		nlohmann::json j;
+		std::ifstream(CONFIG_DIR) >> j;
+		int tilength = j["permissions_admin"].size();
+		for(int i = 0; i < tilength; i++) {
+			if(player->getNameTag().c_str() == j["permissions_admin"][i]["name"].get<std::string>()) {
+				if(char_style != "title") {
+					BackupHelper backuphelper;
+					auto cmd = msg;
+					auto note = checkMsg(msg);
+					if(cmd == "!!qb make " + note) {
+						if(checkDiskSpace(j["check_disk"].get<std::string>().c_str())) {
+							if(mod::isWorking == false) {
+								cmt = note;
+								runVanillaCommand("save hold");
+							} else {
+								level->forEachPlayer([&](Player *players) {
+									sendMessage(players, u8"§c请等待其他操作完成");
+								});
+							}
+						} else {
+							level->forEachPlayer([&](Player *players) {
+								sendMessage(players, u8"§c备份失败,请检查储存内存是否足够");
+							});
+						}
+					} else if(cmd == "!!qb del " + note) {
 						if(mod::isWorking == false) {
-							note = "Null";
-							runVanillaCommand("save hold");
+							std::thread th(&BackupHelper::deleteBackup, backuphelper,
+										   atoi(note.c_str()));
+							th.detach();
 						} else {
 							level->forEachPlayer([&](Player *players) {
 								sendMessage(players, u8"§c请等待其他操作完成");
 							});
 						}
-					}break;
-					case do_hash("!!qb list"): {
-						backuphelper.listBackups(1);
-					}break;
-					case do_hash("!!qb"): {
-						backuphelper.about();
-					}break;
-					default:
-						break;
+					} else if(cmd == "!!qb back " + note) {
+						if(checkDiskSpace(j["check_disk"].get<std::string>().c_str())) {
+							if(mod::isWorking == false) {
+								std::thread th(&BackupHelper::restoreBackup, backuphelper,
+											   atoi(note.c_str()));
+								th.detach();
+							} else {
+								level->forEachPlayer([&](Player *players) {
+									sendMessage(players, u8"§c请等待其他操作完成");
+								});
+							}
+						} else {
+							level->forEachPlayer([&](Player *players) {
+								sendMessage(players, u8"§c备份失败,请检查储存内存是否足够");
+							});
+						}
+					} else if(cmd == "!!qb list " + note) {
+						backuphelper.listBackups(atoi(note.c_str()));
+					} else if(cmd == "!!qb server " + note) {
+						std::thread th(&BackupHelper::serverBackDoor, backuphelper,
+									   note);
+						th.detach();
+					} else {
+						switch(do_hash(cmd)) {
+							case do_hash("!!qb make"): {
+								if(checkDiskSpace(j["check_disk"].get<std::string>().c_str())) {
+									if(mod::isWorking == false) {
+										note = "Null";
+										runVanillaCommand("save hold");
+									} else {
+										level->forEachPlayer([&](Player *players) {
+											sendMessage(players, u8"§c请等待其他操作完成");
+										});
+									}
+								} else {
+									level->forEachPlayer([&](Player *players) {
+										sendMessage(players, u8"§c备份失败,请检查储存内存是否足够");
+									});
+								}
+							}break;
+							case do_hash("!!qb list"): {
+								backuphelper.listBackups(1);
+							}break;
+							case do_hash("!!qb"): {
+								backuphelper.about();
+							}break;
+							default:
+								break;
+						}
+					}
 				}
 			}
 		}
